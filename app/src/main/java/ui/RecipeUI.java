@@ -81,6 +81,8 @@ public class RecipeUI {
                 System.out.println("Main Ingredients: " + menuName[1]);
 
             }
+        } else { // レシピデータが空だった場合、表示
+            System.out.println("No recipes available.");
         }
 
     }
@@ -118,37 +120,67 @@ public class RecipeUI {
      * @throws java.io.IOException 入出力が受け付けられない
      */
     private void searchRecipe() throws IOException {
+        
         // 標準入力準備
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         System.out.print("Enter search query (e.g., 'name=Tomato&ingredient=Garlic'): ");
         String inputSearchWords = reader.readLine();
-        String inputSearchWord[] = inputSearchWords.split("&");
-        // inputMenuNames[1]に検索したいメニュー名を格納
-        String inputMenuNames[] = inputSearchWord[0].split("=");
-        // inputIngredient[1]に検索したい材料名を格納
-        String inputIngredient[] = inputSearchWord[1].split("=");
 
-        data.RecipeFileHandler fileHandler = new data.RecipeFileHandler();
-        ArrayList<String> recipes = new ArrayList<>();
-        recipes = fileHandler.readRecipes();
+        // 入力した検索文字列か正しい形式かを判定
+        if (inputSearchWords.contains("&") && inputSearchWords.contains("=") && inputSearchWords.contains("name")
+                && inputSearchWords.contains("ingredient")) {
 
-        System.out.println("Search Results:");
+            String inputSearchWord[] = inputSearchWords.split("&");
+            // inputMenuNames[1]に検索したいメニュー名を格納
+            String inputMenuNames[] = inputSearchWord[0].split("=");
+            // inputIngredient[1]に検索したい材料名を格納
+            String inputIngredient[] = inputSearchWord[1].split("=");
 
-        // 識別のためcount変数を準備
-        int count = 0;
-        // ArrayList 中身を分割格納してメニュー名表示
-        for (String recipe : recipes) {
-            // メニュー名と材料を分割
-            String[] menuName = recipe.split(",", 2);
-            // 材料を分割
-            String[] materials = menuName[1].split(",");
+            // recipes.txt を読み込み
+            data.RecipeFileHandler fileHandler = new data.RecipeFileHandler();
+            ArrayList<String> recipes = new ArrayList<>();
+            recipes = fileHandler.readRecipes();
 
-            if (menuName[0].contains(inputMenuNames[1])) {
-                System.out.println(recipes.get(count));
+            System.out.println("Search Results:");
+
+            // 識別のためcount変数を準備
+            int count = 0;
+            // 検索に1つでも引っかかったかを管理する変数を準備
+            boolean result = false;
+            // ArrayList 中身を分割格納してメニュー名表示
+            for (String recipe : recipes) {
+                // メニュー名と材料を分割
+                String[] menuName = recipe.split(",", 2);
+                // 材料を分割
+                String[] materials = menuName[1].split(",");
+
+                // メニュー名が含まれているか判定
+                if (menuName[0].contains(inputMenuNames[1])) {
+
+                    // 拡張for文で材料の数、繰り返す
+                    for (String material : materials) {
+
+                        // 材料も含まれているか判定し、含まれていれば、レシピ名、材料を表示
+                        if (material.contains(inputIngredient[1])) {
+                            System.out.println(recipes.get(count));
+                            // 検索に引っかかったため true に変更
+                            result = true;
+                            break;
+                        }
+                    }
+                }
+                // レシピを一致させるために加算
+                count++;
             }
 
-            count++;
+            // 検索に一つも引っかからなかった場合以下を表示する
+            if (!result) {
+                System.out.println("No recipes found matching the criteria.");
+            }
+
+        }else{ // 入力形式を満たしていなかった場合以下を表示する
+            System.out.println("No recipes found matching the criteria.");
         }
 
     }
